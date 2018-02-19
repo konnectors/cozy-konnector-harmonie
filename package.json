@@ -23,8 +23,8 @@
     "build": "webpack",
     "test": "jest",
     "lint": "standard --fix konnector.js",
-    "deploy:travis": "git-directory-deploy --username Cozy --email contact@cozycloud.cc --directory build/ --repo=https://$GITHUB_TOKEN@github.com/cozy/cozy-konnector-harmonie.git",
-    "deploy": "git-directory-deploy --directory build/ --branch build"
+    "deploy": "git-directory-deploy --directory build/ --branch build --repo=https://github.com/konnectors/cozy-konnector-harmonie.git",
+    "deploy:prod": "git-directory-deploy --directory build/ --branch latest --repo=https://github.com/konnectors/cozy-konnector-harmonie.git"
   },
   "dependencies": {
     "cheerio": "0.22.0",
