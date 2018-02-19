@@ -9,7 +9,7 @@
   "keywords": [],
   "author": "",
   "license": "AGPL-3.0",
-  "main": "index.js",
+  "main": "src/index.js",
   "renovate": {
     "extends": ["config:base"],
     "patch": {
@@ -17,9 +17,11 @@
     }
   },
   "scripts": {
-    "start": "node index.js",
-    "dev": "cozy-konnector-dev",
-    "standalone": "cozy-konnector-standalone",
+    "start": "node src/index.js",
+    "dev": "cozy-konnector-dev src/index.js",
+    "standalone": "cozy-konnector-standalone src/index.js",
+    "standalone:record": "REPLAY=record cozy-konnector-standalone src/index.js",
+    "standalone:replay": "REPLAY=replay cozy-konnector-standalone src/index.js",
     "build": "webpack",
     "test": "jest",
     "lint": "standard --fix konnector.js",
