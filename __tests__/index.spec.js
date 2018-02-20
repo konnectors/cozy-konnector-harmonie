@@ -6,7 +6,6 @@ const replay = require("replay");
 replay.fixtures = __dirname + "/fixtures";
 
 const libs = require("../lib");
-const moment = require("moment");
 const login = libs.login;
 const fetchReleves = libs.releves;
 const fetchPaiements = libs.paiements;
@@ -40,7 +39,7 @@ test("login", function() {
 test("releves", function() {
   return fetchReleves
     .bind(data)(fields)
-    .then(function(response) {
+    .then(function() {
       const releves = Array.from(data.releves);
       expect(releves.length).toBe(10);
       expect(releves[0][0]).toEqual(new Date("2017-09-17T22:00:00.000Z"));

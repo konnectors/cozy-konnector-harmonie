@@ -20,7 +20,7 @@ const defaultOptions = {
   jar: j
 };
 
-const login = (module.exports.login = function(requiredFields) {
+module.exports.login = function(requiredFields) {
   return request(defaultOptions)
     .then(body => {
       let $ = cheerio.load(body);
@@ -52,9 +52,9 @@ const login = (module.exports.login = function(requiredFields) {
         this.terminate("LOGIN_FAILED");
       }
     });
-});
+};
 
-const releves = (module.exports.releves = function(requiredFields) {
+module.exports.releves = function() {
   let url = "https://www.harmonie-mutuelle.fr/web/mon-compte/mes-releves";
 
   let options = Object.assign(defaultOptions, {
@@ -86,11 +86,9 @@ const releves = (module.exports.releves = function(requiredFields) {
 
     this.releves = releveList;
   });
-});
+};
 
-const paiements = (module.exports.paiements = function paiements(
-  requiredFields
-) {
+module.exports.paiements = function paiements() {
   let url =
     "https://www.harmonie-mutuelle.fr/web/mon-compte/mes-remboursements";
 
@@ -149,7 +147,7 @@ const paiements = (module.exports.paiements = function paiements(
 
       this.payments = paymentList;
     });
-});
+};
 
 const parseAmount = function(amount) {
   return parseFloat(
@@ -160,7 +158,7 @@ const parseAmount = function(amount) {
   );
 };
 
-const repayments = (module.exports.repayments = function(requiredFields) {
+module.exports.repayments = function() {
   const url =
     "https://www.harmonie-mutuelle.fr/web/mon-compte/mes-remboursements";
   const promises = [];
@@ -236,9 +234,9 @@ const repayments = (module.exports.repayments = function(requiredFields) {
       });
     });
   });
-});
+};
 
-module.exports.customSaveBills = function(requiredFields, entries) {
+module.exports.customSaveBills = function() {
   const bankOptions = {
     identifiers: "Harmonie",
     minDateDelta: 0.1,
