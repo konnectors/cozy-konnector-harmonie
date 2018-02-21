@@ -5,7 +5,7 @@ const replay = require("replay");
 // replay.mode = 'record'
 replay.fixtures = __dirname + "/fixtures";
 
-const libs = require("../lib");
+const libs = require("../src/lib");
 const login = libs.login;
 const fetchReleves = libs.releves;
 const fetchPaiements = libs.paiements;
