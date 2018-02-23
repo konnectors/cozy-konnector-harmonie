@@ -55,7 +55,7 @@
     "request-promise": "4.2.2"
   },
   "devDependencies": {
-    "copy-webpack-plugin": "4.4.1",
+    "copy-webpack-plugin": "4.4.2",
     "eslint": "4.18.1",
     "eslint-config-prettier": "2.9.0",
     "git-directory-deploy": "1.5.1",
