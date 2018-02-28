@@ -48,7 +48,7 @@
   },
   "dependencies": {
     "cheerio": "0.22.0",
-    "cozy-konnector-libs": "3.3.0",
+    "cozy-konnector-libs": "3.5.2",
     "jest": "22.3.0",
     "node-polyglot": "2.2.2",
     "printit": "0.1.20",
