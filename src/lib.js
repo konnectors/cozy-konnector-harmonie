@@ -1,7 +1,9 @@
 const request = require("request-promise");
 const cheerio = require("cheerio");
 const moment = require("moment");
-const { saveBills } = require("cozy-konnector-libs");
+const { saveBills, Document } = require("cozy-konnector-libs");
+const sumBy = require("lodash/sumBy");
+const round = require("lodash/round");
 
 const j = request.jar();
 
@@ -19,6 +21,16 @@ const defaultOptions = {
   },
   jar: j
 };
+
+class Bill extends Document {
+  shouldSave() {
+    return true;
+  }
+
+  shouldUpdate(other) {
+    return !this.isEqual(other);
+  }
+}
 
 module.exports.login = function(requiredFields) {
   return request(defaultOptions)
@@ -193,12 +205,20 @@ module.exports.repayments = function() {
     documents.forEach((document, i) => {
       let doc = JSON.parse(document);
 
+      const groupAmount = round(
+        sumBy(doc.decompteList, reimbursement =>
+          parseAmount(reimbursement.montantRC)
+        ),
+        2
+      );
+
       doc.decompteList.forEach(reimbursement => {
         const paymentInfo = payments[i];
-        let bill = {
+        let bill = new Bill({
           type: "health_costs",
           subtype: reimbursement.labelActe,
           vendor: "Harmonie",
+          groupAmount,
           originalAmount: parseAmount(reimbursement.honoraires),
           amount: parseAmount(reimbursement.montantRC),
           originalDate: moment(paymentInfo.paymentDate, "DD/MM/YYYY"),
@@ -206,7 +226,7 @@ module.exports.repayments = function() {
           isRefund: true,
           beneficiary: `${reimbursement.nom} ${reimbursement.prenom}`,
           socialSecurityRefund: parseAmount(reimbursement.montantRO)
-        };
+        });
 
         // find the corresponding pdf file
         // releves is ordered in reverse chronological order
@@ -245,7 +265,7 @@ module.exports.customSaveBills = function() {
   };
 
   const filterOptions = {
-    keys: ["date", "amount"]
+    keys: ["date", "amount", "vendor"]
   };
 
   return saveBills(
