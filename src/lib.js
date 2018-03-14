@@ -32,6 +32,8 @@ class Bill extends Document {
   }
 }
 
+Bill.version = 1
+
 module.exports.login = function(requiredFields) {
   return request(defaultOptions)
     .then(body => {
