@@ -35,8 +35,8 @@
     "precommit": "eslint .",
     "lint": "eslint .",
     "test": "jest",
-    "deploy": "git-directory-deploy --directory build/ --branch build --repo=https://github.com/konnectors/cozy-konnector-harmonie.git",
-    "deploy:prod": "git-directory-deploy --directory build/ --branch latest --repo=https://github.com/konnectors/cozy-konnector-harmonie.git"
+    "deploy": "git-directory-deploy --directory build/ --branch build --repo=https://$GITHUB_TOKEN@github.com/konnectors/cozy-konnector-harmonie.git",
+    "deploy:prod": "git-directory-deploy --directory build/ --branch latest --repo=https://$GITHUB_TOKEN@github.com/konnectors/cozy-konnector-harmonie.git"
   },
   "dependencies": {
     "cheerio": "0.22.0",
