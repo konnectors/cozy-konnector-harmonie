@@ -1,23 +1,32 @@
 {
   "version": "1.0.0",
   "name": "Harmonie Mutuelle",
-  "type": "node",
+  "type": "konnector",
+  "language": "node",
+  "icon": "harmonie.svg",
   "slug": "harmonie",
-  "description": "description",
-  "source": "git://github.com/cozy/cozy-konnector-harmonie.git",
-  "locales": {
-    "fr": {
-      "description": "Récupère toutes vos factures",
-      "permissions": {
-        "bills": {
-          "description": "Utilisé pour sauvegarder les données de facturation"
-        },
-        "files": {
-          "description": "Utilisé pour sauvegarder les factures"
-        }
+  "source": "git://github.com/konnectors/cozy-konnector-harmonie.git#build",
+  "editor": "Cozy",
+  "vendor_link": "https://www.harmonie-mutuelle.fr/",
+  "categories": ["insurance"],
+  "screenshots": [],
+  "fields": {
+    "login": {
+      "type": "text"
+    },
+    "password": {
+      "type": "password"
+    },
+    "advancedFields": {
+      "folderPath": {
+        "advanced": true,
+        "isRequired": false
       }
     }
   },
+  "data_types": [
+    "bill"
+  ],
   "permissions": {
     "bills": {
       "description": "Required to save the bills data",
@@ -40,5 +49,16 @@
   "developer": {
     "name": "Cozy Cloud",
     "url": "https://cozy.io"
+  },
+  "langs": ["fr"],
+  "locales": {
+    "fr": {
+      "short_description": "Récupérer vos données Harmonie Mutuelle dans votre Cozy",
+      "long_description": "Ce fournisseur vous permettra de récupérer l'ensemble de vos factures Harmonie Mutuelle dans votre Cozy."
+    },
+    "en": {
+      "short_description": "Fetch your Harmonie data in your Cozy",
+      "long_description": "This provider will allow you to fetch all your Harmonie bills in your Cozy."
+    }
   }
 }
