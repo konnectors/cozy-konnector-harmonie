@@ -9,7 +9,6 @@
   "editor": "Cozy",
   "vendor_link": "https://www.harmonie-mutuelle.fr/",
   "categories": ["insurance"],
-  "screenshots": [],
   "fields": {
     "login": {
       "type": "text"
@@ -27,7 +26,12 @@
   "data_types": [
     "bill"
   ],
+  "screenshots": [],
   "permissions": {
+    "bank operations": {
+      "description": "Required to link the bills with their bank operation",
+      "type": "io.cozy.bank.operations"
+    },
     "bills": {
       "description": "Required to save the bills data",
       "type": "io.cozy.bills"
@@ -35,10 +39,6 @@
     "files": {
       "description": "Required to save the bills",
       "type": "io.cozy.files"
-    },
-    "bankoperations": {
-      "description": "Required to link the bills with their bank operation",
-      "type": "io.cozy.bank.operations"
     },
     "accounts": {
       "description": "Required to get the account's data",

@@ -1,29 +1,41 @@
 language: node_js
 node_js:
-  - '8'
+- '8'
 env:
   global:
-    # kosssi GITHUB_TOKEN
-    - secure: "DLd1SJdh4YbWEor71qlzngGuBn+5ej36b7RHa4pvHYp93/qxWrID6YY9GOZEl4+XMknULY38wLv74yTuTpw9isZYr5w5i3OfO18ETLRX001l7aqkguqxye3Mrc6APKZL0+5YhIXP/KlCELpPoe6K+PQlCeoXKS6sTp2LDkbdV077nEHuSljO/VwryEc9IC6W7rZBuGczDjxhwY3hGuT9kjJYURKy6YD+qyC6roP8PcCGOTtOjAP68NMC4Dkamr3fMXb5x7a4RoWmHbA0BpmgV7ZRe7laju+HPy6Tn2JXo74MVSKf2FlfsWCN2yiV+1Rx6mT/TAMjMLwrUBX+5XghdpK5dxK3qC3KdDjLdkEHEexoL0T12d9ACv6LC/u8L0+P0XUSzPm+TOUEfNZ0n2/kBGfJPzINBtG63ZpJw8fXPKfeC1MwJR42Ds+afLXuRbUzAeLRDEJHd04zAJ1JNQMRofiATzoK/0iogCKkrKe/qC3qVYciK84sC2y4jfA2pkhvE2RAQ0b3KDuHXZZqnJO5IQ8zYTVxkrQrSullia4vWztmr2xjn/G2QKSS06Fye/94ef0VqGXk7XTM/oTrqR7UoGeK5lc2GaFDZTqhl/jaK+DEYg+dL4m6k9lRwX79anJzb722iEt1F16EefX/jJ4Vr0QddaRn2btGl3q7HmYlpb0="
-    # REGISTRY_TOKEN
-    - secure: l0bU0ggOcnR1UUz38U5412ZX8w9Ny/LQ8lO96TFaeBdbUJhr0rC+VTngQf2dcpYvVlWlMGKBBBi/breIIfwM7Uwzn+68Az5LHQ025jPjD9mXO1w6FXFowV+Rjf3TBRvXB6DwnM2pd7reUJf6p5RWutBokYxsM999eK+vSmxwzVDRksVVU/HAHsys4QdzionZSZYNEoCaw0MkhfAFAsky0P5jkqducH7DddGpV/WxboRCseQZ7GqWJoeO21ZL0H9iRiHFOALNl2s4zMyCtC/KU6usiUzYCimVTasPaVlhkz8kqqNwNY6mpzVImlKsvVAaeEKEghgmQaWEha8UPbXc2q1wcQiNZh2iv1m1vo9TQrhG0h1AIqzbftAbyi3ntDqJ0XZJqFGYN6wLE5wOatHJIfDMdww/Onr0fAB5ohP2WeRDDm54r2SONzQWg27fu5oafZayfhvJvslT+mWMZ0vPhQqRKL0UFWe0X0iLGPwe6Ty5LJFYWEqM70XUwY7I9QcZpMP11/RFDgqEQw9vME76rv1npgEysziblicuZohodTnoOz1yq8gKTRgQql/FPLKXeTW7hMQyXUQYnJLeyPTTm/DzxZbAJh6CAmQ8oFyv2OchIxOkUI9BuXFAMpeLfIPBANIVirco1A0Q+kMMrtY3KiaOex2rrz98ffAvqJ2oHDc=
+  - GH_USER_EMAIL="travis@example.org"
+  - GH_USER_NAME="cozy-bot"
+  - DEPLOY_REPOSITORY="git@github.com:konnectors/cozy-konnector-harmonie.git"
+  - secure: ajf3N5Q9XiGywrHXwH+rahi5Vi6j/2XM+Lqsuma7v1MuteIWkQYvVQuXh5GKYR4WK0zcWs1voB5ze9iYp8oLSzNlOTO394Gzdc9TvMqju3gl5kXc8nk+v58iECi9aaOMJfoGY84Ugrx+o6PREiMSbzO6rC1sqTS+N5qO/4BRbw0cy2A0S55qwpWo8ZoUxWZeZj+/v4UI4LcqLFmimS/97d5O2N0qxo01FdPx+tupDzzAvcxaXCNgMJRbT5ZmHaaRG6uB79Rw2LU6igdentQFDrqGP/UYpaJth7WRbeytLr/IV61lkGgHeH33Ol6Tcp/MEIspRVVl/XGBY9B+jDRJiZAZhkJU90gAx+atxeXfqlK2/V/D4USh0p2X+4OkkEOcsxKU2SVMTZjR701+DllLw/5gLFfBtxXIAa6wlDftLAJq9v41PWfvuedqiCfSItN5OaknD1kxqZjk9OiwrN9Z9p8ENbLi3w4gT/euYvCBN1ku35jqI2Qbeko9QNlSoMIQw7riR/BU4/EBGujlTxiq3J+chwyNOoA7mW7j2ybimCe5Ft0iS7hO0o2jCe/M1Qz2A3Gq+JltHzdSXoyEbJ8h4dFwe3W5y8WFqmo6Ev+02xxCTFkrUcrGu9uKDtPbznaSJXZI5w6lj5k6jE8xE2PRiXDCBRYvZ0KzKmWkf2bkZic=
 cache:
   yarn: true
   directories:
-    - node_modules
+  - node_modules
 script:
-  - yarn build
-  - yarn lint
+- yarn lint
+- yarn build
 deploy:
 - provider: script
-  repo: konnectors/cozy-konnector-harmonie
   skip-cleanup: true
-  script: DEPLOY_BRANCH=build && yarn deploy && yarn cozyPublish
+  script: DEPLOY_BRANCH=build yarn deploy && yarn cozyPublish
   on:
     branch: master
 - provider: script
-  repo: konnectors/cozy-konnector-harmonie
   skip-cleanup: true
-  script: DEPLOY_BRANCH=build && yarn deploy && yarn cozyPublish
+  script: DEPLOY_BRANCH=latest yarn deploy
+  on:
+    branch: prod
+- provider: script
+  skip-cleanup: true
+  script: DEPLOY_BRANCH=build yarn deploy && yarn cozyPublish
   on:
     tags: true
+before_install:
+- openssl aes-256-cbc -K $encrypted_15281412d487_key -iv $encrypted_15281412d487_iv
+  -in github_deploy_key.enc -out /tmp/github_deploy_key -d
+- eval "$(ssh-agent -s)"
+- chmod 600 /tmp/github_deploy_key
+- ssh-add /tmp/github_deploy_key
+after_deploy:
+- rm /tmp/github_deploy_key
+- ssh-add -D
