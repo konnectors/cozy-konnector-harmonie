@@ -5,7 +5,7 @@
   "language": "node",
   "icon": "harmonie.svg",
   "slug": "harmonie",
-  "source": "git://github.com/konnectors/cozy-konnector-harmonie.git#build",
+  "source": "git://github.com/konnectors/cozy-konnector-harmonie.git",
   "editor": "Cozy",
   "vendor_link": "https://www.harmonie-mutuelle.fr/",
   "categories": ["insurance"],
@@ -61,5 +61,6 @@
       "long_description": "This provider will allow you to fetch all your Harmonie bills in your Cozy."
     }
   },
-  "banksTransactionRegExp": "\\bharmonie\\b"
+  "banksTransactionRegExp": "\\bharmonie\\b",
+  "manifest_version": "2"
 }
