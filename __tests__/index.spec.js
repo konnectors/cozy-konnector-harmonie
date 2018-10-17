@@ -1,5 +1,6 @@
 // Replay config
 const replay = require('replay')
+const moment = require('moment')
 
 // Cannot get replay to work in replay mode :/
 // replay.mode = 'record'
@@ -14,23 +15,6 @@ const fetchRepayments = libs.repayments
 const fields = require('../konnector-dev-config.json').fields
 
 const data = {}
-
-expect.extend({
-  toEqualMoment: function(received, argument) {
-    const pass = received.isSame(argument)
-    if (pass) {
-      return {
-        message: `expected ${received} not to equal moment ${argument}`,
-        pass
-      }
-    } else {
-      return {
-        message: `expected ${received} to equal moment ${argument}`,
-        pass
-      }
-    }
-  }
-})
 
 test('login', function() {
   return login(fields)
@@ -84,7 +68,7 @@ test('repayments', function() {
         filename: 'Facture 2017/09/18 Sep 2017.pdf'
       })
 
-      expect(bill.originalDate).toEqualMoment('2017-09-11')
-      expect(bill.date).toEqualMoment('2017-09-06')
+      expect(bill.originalDate).toEqual(moment('2017-09-11').toDate())
+      expect(bill.date).toEqual(moment('2017-09-06').toDate())
     })
 })

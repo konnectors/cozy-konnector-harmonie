@@ -222,8 +222,8 @@ module.exports.repayments = function() {
           groupAmount,
           originalAmount: parseAmount(reimbursement.honoraires),
           amount: parseAmount(reimbursement.montantRC),
-          originalDate: moment(paymentInfo.paymentDate, 'DD/MM/YYYY'),
-          date: moment(reimbursement.dateSoin, 'DD/MM/YYYY'),
+          originalDate: moment(paymentInfo.paymentDate, 'DD/MM/YYYY').toDate(),
+          date: moment(reimbursement.dateSoin, 'DD/MM/YYYY').toDate(),
           isRefund: true,
           beneficiary: `${reimbursement.nom} ${reimbursement.prenom}`,
           socialSecurityRefund: parseAmount(reimbursement.montantRO)
