@@ -1,5 +1,5 @@
 {
-  "version": "1.2.0",
+  "version": "1.1.1",
   "name": "Harmonie Mutuelle",
   "type": "konnector",
   "language": "node",
@@ -59,12 +59,12 @@
   ],
   "locales": {
     "fr": {
-      "short_description": "Récupérer vos données Harmonie Mutuelle dans votre Cozy",
-      "long_description": "Ce fournisseur vous permettra de récupérer l'ensemble de vos factures Harmonie Mutuelle dans votre Cozy."
+      "short_description": "Récupère vos relevés de remboursement",
+      "long_description": "<p>Récupère les relévés de remboursement de votre assurance santé complémentaire, pour les adhérents particuliers ou salariés.</p><br><p>Les comptes de Sécurité Sociale Indépendants ne sont pas gérés.</p><br><p>Si vous avez connecté le compte bancaire avec lequel vous effectuez vos dépenses de santé, ceci activera le suivi de remboursement dans l'application Cozy Banks.</p>"
     },
     "en": {
-      "short_description": "Fetch your Harmonie data in your Cozy",
-      "long_description": "This provider will allow you to fetch all your Harmonie bills in your Cozy."
+      "short_description": "Fetch your reimbursment statement",
+      "long_description": "<p>This connector fetches your reimbursement statements for your complementary health insurance.</p><br><p>\"Sécurité Sociale Indépendants\" are not supported.</p><br><p>If you have connected the bank account with which you make your medical expenses, this will enable refund tracking in the Cozy Banks app.</p>"
     }
   },
   "banksTransactionRegExp": "\\bharmonie\\b",
