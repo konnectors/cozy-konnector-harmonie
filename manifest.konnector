@@ -5,7 +5,7 @@
   "language": "node",
   "icon": "harmonie.svg",
   "slug": "harmonie",
-  "source": "git://github.com/konnectors/cozy-konnector-harmonie.git",
+  "source": "git@github.com:konnectors/cozy-konnector-harmonie.git",
   "editor": "Cozy",
   "vendor_link": "https://www.harmonie-mutuelle.fr/",
   "categories": [
