@@ -269,9 +269,14 @@ module.exports.customSaveBills = function() {
     keys: ['date', 'amount', 'vendor']
   }
 
+  const accountOptions = {
+    sourceAccount: this._account._id,
+    sourceAccountIdentifier: this.fields.login
+  }
+
   return saveBills(
     this.files,
     this.fields.folderPath,
-    Object.assign({}, bankOptions, filterOptions)
+    Object.assign({}, accountOptions, bankOptions, filterOptions)
   )
 }
