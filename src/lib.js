@@ -259,10 +259,7 @@ module.exports.repayments = function() {
 
 module.exports.customSaveBills = function() {
   const bankOptions = {
-    identifiers: ['Harmonie'],
-    minDateDelta: 0.1,
-    maxDateDelta: 40,
-    amountDelta: 0.1
+    linkBankOperations: false
   }
 
   const filterOptions = {
@@ -270,13 +267,17 @@ module.exports.customSaveBills = function() {
   }
 
   const accountOptions = {
-    sourceAccount: this._account._id,
+    sourceAccount: this.accountId,
     sourceAccountIdentifier: this.fields.login
+  }
+
+  const fileOptions = {
+    fileIdAttributes: ['uniqueId']
   }
 
   return saveBills(
     this.files,
     this.fields.folderPath,
-    Object.assign({}, accountOptions, bankOptions, filterOptions)
+    Object.assign({}, accountOptions, bankOptions, filterOptions, fileOptions)
   )
 }
