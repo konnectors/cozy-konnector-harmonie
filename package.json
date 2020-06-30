@@ -49,7 +49,7 @@
     "eslint-config-cozy-app": "1.5.0",
     "git-directory-deploy": "1.5.1",
     "husky": "4.2.5",
-    "jest": "26.0.1",
+    "jest": "26.1.0",
     "konitor": "0.10.3",
     "replay": "2.4.0",
     "svgo": "1.3.2",
