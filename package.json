@@ -44,7 +44,7 @@
   "devDependencies": {
     "cozy-jobs-cli": "1.16.6",
     "cozy-konnector-build": "1.2.3",
-    "jest": "27.4.5",
+    "jest": "27.5.0",
     "replay": "2.4.0"
   }
 }
