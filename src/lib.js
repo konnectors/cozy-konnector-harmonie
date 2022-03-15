@@ -1,3 +1,5 @@
+// We keep this file around for future updates, it contains informations about the reimbursements but the account we are using to fix the konnector did not dispose of bills.
+
 const request = require('request-promise')
 const cheerio = require('cheerio')
 const moment = require('moment')
