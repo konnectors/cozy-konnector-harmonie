@@ -1,17 +1,17 @@
 process.env.SENTRY_DSN =
   process.env.SENTRY_DSN ||
-  'https://c21e908d57a340d0808fc44e59e6b4e2:b60af624e8364277b9ee2e864eb11d36@sentry.cozycloud.cc/16'
+  'https://a9ac468e07e44180b5e32f5aae525939@errors.cozycloud.cc/36'
 
 const {
   BaseKonnector,
   requestFactory,
   log,
-  // cozyClient,
+  cozyClient,
   solveCaptcha
 } = require('cozy-konnector-libs')
 
-// const models = cozyClient.new.models
-// const { Qualification } = models.document
+const models = cozyClient.new.models
+const { Qualification } = models.document
 
 const request = requestFactory({
   // The debug mode shows all the details about HTTP requests and responses. Very useful for
@@ -166,7 +166,17 @@ async function parseDocs(authResponse) {
           .toLowerCase()}_HarmonieMutuelle.pdf`,
         fileurl: `https://api.harmonie-mutuelle.fr/services/hapiour/adherent-api/v1/document/${doc.idDocument}`,
         vendorRef: doc.idDocument,
-        date: doc.dateEdition,
+        fileAttributes: {
+          metadata: {
+            contentAuthor: 'harmonie-et-moi.fr',
+            issueDate: new Date(),
+            datetime: doc.dateEdition,
+            datetimeLabel: `issueDate`,
+            vendorRef: doc.idDocument,
+            carbonCopy: true,
+            qualification: Qualification.getByLabel('other_health_document')
+          }
+        },
         requestOptions: {
           headers: {
             'User-Agent':
