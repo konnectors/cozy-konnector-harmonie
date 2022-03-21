@@ -7,6 +7,7 @@ const {
   requestFactory,
   log,
   cozyClient,
+  saveFiles,
   solveCaptcha
 } = require('cozy-konnector-libs')
 
@@ -40,18 +41,10 @@ async function start(fields, cozyParameters) {
     .then(response => {
       return response
     })
-
-  log('info', authRequest)
   log('info', 'Vous êtes connecté')
 
-  const docs = await parseDocs(authRequest)
-
-  await this.saveFiles(docs, fields, {
-    fileIdAttributes: ['vendorRef'],
-    identifiers: ['Harmonie Mutuelle'],
-    sourceAccount: this.accountId,
-    sourceAccountIdentifier: fields.login
-  })
+  const { docs, firstToken } = await parseDocs(authRequest)
+  await downloadFiles(docs, firstToken, this.accountId, fields)
   log('info', 'Fin de la récupération')
 }
 
@@ -67,8 +60,7 @@ async function authenticate(username, password) {
   })
 
   await request({
-    uri:
-      'https://api.harmonie-mutuelle.fr/services/hapiour/adherent-api/v1/authenticate/prospect',
+    uri: 'https://api.harmonie-mutuelle.fr/services/hapiour/adherent-api/v1/authenticate/prospect',
     method: 'POST',
     headers: {
       'User-Agent':
@@ -105,8 +97,7 @@ async function authenticate(username, password) {
     })
 
   const authRequest = await request({
-    uri:
-      'https://api.harmonie-mutuelle.fr/services/hapiour/adherent-api/v1/authenticate/adherent',
+    uri: 'https://api.harmonie-mutuelle.fr/services/hapiour/adherent-api/v1/authenticate/adherent',
     method: 'POST',
     headers: {
       Host: 'api.harmonie-mutuelle.fr',
@@ -137,27 +128,24 @@ async function authenticate(username, password) {
   })
 
   return authRequest
-  // .then(response => {
-  //   log('debug', response)
-  //   return response
-  // })
 }
 
 async function parseDocs(authResponse) {
   log('debug', 'Vérification des factures')
+  const firstToken = authResponse.caseless.dict.authorization
   try {
     const docsList = await request({
-      uri:
-        'https://api.harmonie-mutuelle.fr/services/hapiour/adherent-api/v1/documents?typeDocument=COURRIER_SANTE_ACTIVITE',
+      uri: 'https://api.harmonie-mutuelle.fr/services/hapiour/adherent-api/v1/documents?typeDocument=COURRIER_SANTE_ACTIVITE',
       method: 'GET',
       headers: {
         'User-Agent':
           'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:94.0) Gecko/20100101 Firefox/94.0',
         'content-type': 'application/json',
         ApiKey: `${ApiKey}`,
-        Authorization: `${authResponse.caseless.dict.authorization}`
+        Authorization: `${firstToken}`
       }
     })
+
     const docs = docsList.documentV1List.map(doc => {
       return {
         typeDocument: doc.typeDocument,
@@ -176,24 +164,91 @@ async function parseDocs(authResponse) {
             carbonCopy: true,
             qualification: Qualification.getByLabel('other_health_document')
           }
-        },
+        }
+      }
+    })
+    return { docs, firstToken }
+  } catch (err) {
+    log('debug', err.message.substring(0, 60))
+    log('debug', `Pas de documents trouvé pour ce compte`)
+    return []
+  }
+}
+
+async function downloadFiles(docs, firstToken, accountId, fields) {
+  log('debug', `Downloading file one by one`)
+  try {
+    let firstDocArray = []
+    firstDocArray.push({
+      ...docs.shift(),
+      requestOptions: {
+        headers: {
+          'User-Agent':
+            'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:94.0) Gecko/20100101 Firefox/94.0',
+          'content-type': 'application/json',
+          ApiKey: `${ApiKey}`,
+          Authorization: `${firstToken}`
+        }
+      }
+    })
+    const fileRequest = await request({
+      uri: `${firstDocArray[0].fileurl}`,
+      method: 'GET',
+      headers: {
+        'User-Agent':
+          'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:94.0) Gecko/20100101 Firefox/94.0',
+        'content-type': 'application/json',
+        ApiKey: `${ApiKey}`,
+        Authorization: `${firstToken}`
+      },
+      resolveWithFullResponse: true
+    })
+    let nextToken = fileRequest.caseless.dict.authorization
+    await saveFiles(firstDocArray, fields, {
+      fileIdAttributes: ['vendorRef'],
+      identifiers: ['Harmonie Mutuelle'],
+      sourceAccount: accountId,
+      sourceAccountIdentifier: fields.login
+    })
+
+    for (let i = 0; i < docs.length; i++) {
+      let leftoverDocs = []
+      leftoverDocs.push({
+        ...docs[i],
         requestOptions: {
           headers: {
             'User-Agent':
               'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:94.0) Gecko/20100101 Firefox/94.0',
             'content-type': 'application/json',
             ApiKey: `${ApiKey}`,
-            Authorization: `${authResponse.caseless.dict.authorization}`
+            Authorization: `${nextToken}`
           }
         }
-      }
-    })
-    log('debug', docs)
-    return docs
+      })
+
+      const loopFileRequest = await request({
+        uri: `${docs[i].fileurl}`,
+        method: 'GET',
+        headers: {
+          'User-Agent':
+            'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:94.0) Gecko/20100101 Firefox/94.0',
+          'content-type': 'application/json',
+          ApiKey: `${ApiKey}`,
+          Authorization: `${nextToken}`
+        },
+        resolveWithFullResponse: true
+      })
+      nextToken = loopFileRequest.caseless.dict.authorization
+      await saveFiles(leftoverDocs, fields, {
+        fileIdAttributes: ['vendorRef'],
+        identifiers: ['Harmonie Mutuelle'],
+        sourceAccount: accountId,
+        sourceAccountIdentifier: fields.login
+      })
+    }
   } catch (err) {
-    log('debug', err.message.substring(0, 60))
-    log('debug', `Pas de documents trouvé pour ce compte`)
-    return []
+    log('debug', `something went wrong with this file`)
+    log('debug', err.message)
   }
 
   // We keep this around for future updates, it contains informations about the reimbursements but the account we are using to fix the konnector did not dispose of bills.
