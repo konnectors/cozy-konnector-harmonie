@@ -30,6 +30,9 @@
   ],
   "screenshots": [],
   "permissions": {
+    "carbon_copy": {
+      "type": "io.cozy.certified.carbon_copy"
+    },
     "bank operations": {
       "description": "Required to link the bills with their bank operation",
       "type": "io.cozy.bank.operations"
@@ -60,13 +63,45 @@
   "locales": {
     "fr": {
       "short_description": "Récupère vos relevés de remboursement",
-      "long_description": "<p>Récupère les relévés de remboursement de votre assurance santé complémentaire, pour les adhérents particuliers ou salariés.</p><br><p>Les comptes de Sécurité Sociale Indépendants ne sont pas gérés.<br>Les comptes \"Harmonie Fonction Publique\" ne sont pas gérés.</p><br><p>Si vous avez connecté le compte bancaire avec lequel vous effectuez vos dépenses de santé, ceci activera le suivi de remboursement dans l'application Cozy Banks.</p><p>Vous devez auparavant vous inscrire sur le service de relevés de santé en ligne sur le site internet d'Harmonie Mutuelle.</p>"
+      "long_description": "<p>Récupère les relévés de remboursement de votre assurance santé complémentaire, pour les adhérents particuliers ou salariés.</p><br><p>Les comptes de Sécurité Sociale Indépendants ne sont pas gérés.<br>Les comptes \"Harmonie Fonction Publique\" ne sont pas gérés.</p><br><p>Si vous avez connecté le compte bancaire avec lequel vous effectuez vos dépenses de santé, ceci activera le suivi de remboursement dans l'application Cozy Banks.</p><p>Vous devez auparavant vous inscrire sur le service de relevés de santé en ligne sur le site internet d'Harmonie Mutuelle.</p>",
+      "permissions": {
+        "carboncopy": {
+          "description": "Utilisé pour certifier que vos fichiers sont copie conforme avec les documents d'origine"
+        },
+        "files": {
+          "description": "Utilisé pour sauvegarder les factures"
+        },
+        "accounts": {
+          "description": "Utilisé pour obtenir les données du compte"
+        }
+      }
     },
     "en": {
       "short_description": "Fetch your reimbursment statement",
-      "long_description": "<p>This connector fetches your reimbursement statements for your complementary health insurance.</p><br><p>\"Sécurité Sociale Indépendants\" are not supported.<br>\"Harmonie Fonction Publique\" account are not supported.</p><br><p>If you have connected the bank account with which you make your medical expenses, this will enable refund tracking in the Cozy Banks app.</p>"
+      "long_description": "<p>This connector fetches your reimbursement statements for your complementary health insurance.</p><br><p>\"Sécurité Sociale Indépendants\" are not supported.<br>\"Harmonie Fonction Publique\" account are not supported.</p><br><p>If you have connected the bank account with which you make your medical expenses, this will enable refund tracking in the Cozy Banks app.</p>",
+      "permissions": {
+        "carboncopy": {
+          "description": "Use to certify your files are the exact copy of the originals"
+        },
+        "files": {
+          "description": "Required to save the bills"
+        },
+        "accounts": {
+          "description": "Required to get the account's data"
+        }
+      }
     }
   },
+  "qualification_labels": [
+    "other_health_document"
+  ],
+  "features": [
+    "LOGIN_OK",
+    "METADATA_DEDUP",
+    "CARBON_COPY",
+    "DOC_QUALIFICATION_V2",
+    "SENTRY_V2"
+  ],
   "banksTransactionRegExp": "\\bharmonie\\b",
   "manifest_version": "2"
 }

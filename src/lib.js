@@ -1,283 +1,285 @@
-const request = require('request-promise')
-const cheerio = require('cheerio')
-const moment = require('moment')
-const { saveBills, Document } = require('cozy-konnector-libs')
-const sumBy = require('lodash/sumBy')
-const round = require('lodash/round')
+// // We keep this file around for future updates, it contains informations about the reimbursements but the account we are using to fix the konnector did not dispose of bills.
 
-const j = request.jar()
+// const request = require('request-promise')
+// const cheerio = require('cheerio')
+// const moment = require('moment')
+// const { saveBills, Document } = require('cozy-konnector-libs')
+// const sumBy = require('lodash/sumBy')
+// const round = require('lodash/round')
 
-const baseUrl = 'https://www.harmonie-mutuelle.fr/'
-const userAgent =
-  'Mozilla/5.0 (X11; Fedora; Linux x86_64; rv:37.0) ' +
-  'Gecko/20100101 Firefox/37.0'
+// const j = request.jar()
 
-const defaultOptions = {
-  method: 'GET',
-  uri: `${baseUrl}`,
-  headers: {
-    'User-Agent': userAgent,
-    Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
-  },
-  jar: j
-}
+// const baseUrl = 'https://www.harmonie-mutuelle.fr/'
+// const userAgent =
+//   'Mozilla/5.0 (X11; Fedora; Linux x86_64; rv:37.0) ' +
+//   'Gecko/20100101 Firefox/37.0'
 
-class Bill extends Document {
-  shouldSave() {
-    return true
-  }
+// const defaultOptions = {
+//   method: 'GET',
+//   uri: `${baseUrl}`,
+//   headers: {
+//     'User-Agent': userAgent,
+//     Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+//   },
+//   jar: j
+// }
 
-  shouldUpdate(other) {
-    return !this.isEqual(other)
-  }
-}
+// class Bill extends Document {
+//   shouldSave() {
+//     return true
+//   }
 
-Bill.version = 1
+//   shouldUpdate(other) {
+//     return !this.isEqual(other)
+//   }
+// }
 
-module.exports.login = function(requiredFields) {
-  return request(defaultOptions)
-    .then(body => {
-      let $ = cheerio.load(body)
-      let actionUrl = $('#_58_fm').prop('action')
+// Bill.version = 1
 
-      $('#_58_login').val(requiredFields.login)
-      $('#_58_password').val(requiredFields.password)
+// module.exports.login = function(requiredFields) {
+//   return request(defaultOptions)
+//     .then(body => {
+//       let $ = cheerio.load(body)
+//       let actionUrl = $('#_58_fm').prop('action')
 
-      let formDataArray = $('#_58_fm').serializeArray()
-      let formData = {}
+//       $('#_58_login').val(requiredFields.login)
+//       $('#_58_password').val(requiredFields.password)
 
-      formDataArray.forEach(pair => {
-        formData[pair.name] = pair.value
-      })
+//       let formDataArray = $('#_58_fm').serializeArray()
+//       let formData = {}
 
-      let options = Object.assign(defaultOptions, {
-        method: 'POST',
-        uri: actionUrl,
-        formData: formData,
-        simple: false,
-        resolveWithFullResponse: true
-      })
+//       formDataArray.forEach(pair => {
+//         formData[pair.name] = pair.value
+//       })
 
-      return request(options)
-    })
-    .then(response => {
-      // this is a bit strange: if the status code is 302, it means the login was successful. If it's 200, it actually means there was an error. This may change in the future if the form's action is changed.
-      if (response.statusCode !== 302) {
-        this.terminate('LOGIN_FAILED')
-      }
-    })
-}
+//       let options = Object.assign(defaultOptions, {
+//         method: 'POST',
+//         uri: actionUrl,
+//         formData: formData,
+//         simple: false,
+//         resolveWithFullResponse: true
+//       })
 
-module.exports.releves = function() {
-  let url = 'https://www.harmonie-mutuelle.fr/web/mon-compte/mes-releves'
+//       return request(options)
+//     })
+//     .then(response => {
+//       // this is a bit strange: if the status code is 302, it means the login was successful. If it's 200, it actually means there was an error. This may change in the future if the form's action is changed.
+//       if (response.statusCode !== 302) {
+//         this.terminate('LOGIN_FAILED')
+//       }
+//     })
+// }
 
-  let options = Object.assign(defaultOptions, {
-    uri: url,
-    resolveWithFullResponse: false
-  })
+// module.exports.releves = function() {
+//   let url = 'https://www.harmonie-mutuelle.fr/web/mon-compte/mes-releves'
 
-  return request(options).then(body => {
-    let $ = cheerio.load(body)
-    let releveList = new Map()
+//   let options = Object.assign(defaultOptions, {
+//     uri: url,
+//     resolveWithFullResponse: false
+//   })
 
-    $('#decompte_table tbody tr').each((index, tr) => {
-      let $tr = $(tr)
+//   return request(options).then(body => {
+//     let $ = cheerio.load(body)
+//     let releveList = new Map()
 
-      let link = $tr.find('a').attr('href')
-      let date = $tr
-        .find('td')
-        .first()
-        .text()
-      date = new Date(
-        date
-          .split('/')
-          .reverse()
-          .join('/')
-      )
+//     $('#decompte_table tbody tr').each((index, tr) => {
+//       let $tr = $(tr)
 
-      releveList.set(date, link)
-    })
+//       let link = $tr.find('a').attr('href')
+//       let date = $tr
+//         .find('td')
+//         .first()
+//         .text()
+//       date = new Date(
+//         date
+//           .split('/')
+//           .reverse()
+//           .join('/')
+//       )
 
-    this.releves = releveList
-  })
-}
+//       releveList.set(date, link)
+//     })
 
-module.exports.paiements = function paiements() {
-  let url = 'https://www.harmonie-mutuelle.fr/web/mon-compte/mes-remboursements'
+//     this.releves = releveList
+//   })
+// }
 
-  let options = Object.assign(defaultOptions, {
-    uri: url,
-    resolveWithFullResponse: false
-  })
+// module.exports.paiements = function paiements() {
+//   let url = 'https://www.harmonie-mutuelle.fr/web/mon-compte/mes-remboursements'
 
-  return request(options)
-    .then(body => {
-      let $ = cheerio.load(body)
-      const $form = $('[name=remboursementForm]')
-      const formvalues = $form.serializeArray().reduce((memo, item) => {
-        memo[item.name] = item.value
-        return memo
-      }, {})
+//   let options = Object.assign(defaultOptions, {
+//     uri: url,
+//     resolveWithFullResponse: false
+//   })
 
-      // run a request from one year ago
-      formvalues.dateDebutJour = formvalues.dateFinJour
-      formvalues.dateDebutMois = formvalues.dateFinMois
-      formvalues.dateDebutAnnee = formvalues.dateFinAnnee - 1 + ''
+//   return request(options)
+//     .then(body => {
+//       let $ = cheerio.load(body)
+//       const $form = $('[name=remboursementForm]')
+//       const formvalues = $form.serializeArray().reduce((memo, item) => {
+//         memo[item.name] = item.value
+//         return memo
+//       }, {})
 
-      const url = $form.attr('action')
-      let options = {
-        uri: url,
-        method: 'POST',
-        form: formvalues,
-        headers: {
-          'User-Agent': userAgent,
-          Accept:
-            'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
-        },
-        jar: j
-      }
-      return request(options)
-    })
-    .then(body => {
-      let $ = cheerio.load(body)
-      let paymentList = {}
+//       // run a request from one year ago
+//       formvalues.dateDebutJour = formvalues.dateFinJour
+//       formvalues.dateDebutMois = formvalues.dateFinMois
+//       formvalues.dateDebutAnnee = formvalues.dateFinAnnee - 1 + ''
 
-      const $payments = $('tr').filter((i, x) => {
-        return x.attribs.id && x.attribs.id.indexOf('remboursement') > -1
-      })
+//       const url = $form.attr('action')
+//       let options = {
+//         uri: url,
+//         method: 'POST',
+//         form: formvalues,
+//         headers: {
+//           'User-Agent': userAgent,
+//           Accept:
+//             'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+//         },
+//         jar: j
+//       }
+//       return request(options)
+//     })
+//     .then(body => {
+//       let $ = cheerio.load(body)
+//       let paymentList = {}
 
-      $payments.each(function(i, node) {
-        const $node = $(node)
-        const loupe = $node.find('img.loupe')[0]
-        let onclick = loupe.attribs.onclick
-        if (!onclick) return
-        let chunks = onclick.split("'")
-        paymentList[chunks[1]] = {
-          id: chunks[3],
-          paymentDate: $($node.find('td')[1]).text()
-        }
-      })
+//       const $payments = $('tr').filter((i, x) => {
+//         return x.attribs.id && x.attribs.id.indexOf('remboursement') > -1
+//       })
 
-      this.payments = paymentList
-    })
-}
+//       $payments.each(function(i, node) {
+//         const $node = $(node)
+//         const loupe = $node.find('img.loupe')[0]
+//         let onclick = loupe.attribs.onclick
+//         if (!onclick) return
+//         let chunks = onclick.split("'")
+//         paymentList[chunks[1]] = {
+//           id: chunks[3],
+//           paymentDate: $($node.find('td')[1]).text()
+//         }
+//       })
 
-const parseAmount = function(amount) {
-  return parseFloat(
-    amount
-      .replace('&nbsp;', '')
-      .replace('&euro;', '')
-      .replace(',', '.')
-  )
-}
+//       this.payments = paymentList
+//     })
+// }
 
-module.exports.repayments = function() {
-  const url =
-    'https://www.harmonie-mutuelle.fr/web/mon-compte/mes-remboursements'
-  const promises = []
-  const payments = []
+// const parseAmount = function(amount) {
+//   return parseFloat(
+//     amount
+//       .replace('&nbsp;', '')
+//       .replace('&euro;', '')
+//       .replace(',', '.')
+//   )
+// }
 
-  for (let paymentCounter in this.payments) {
-    const payment = this.payments[paymentCounter]
-    let qs = {
-      p_p_id: 'mhmRemboursement_WAR_mhmportalapplication',
-      p_p_lifecycle: 2,
-      p_p_state: 'normal',
-      p_p_mode: 'view',
-      p_p_cacheability: 'cacheLevelPage',
-      p_p_col_id: 'column-2',
-      p_p_col_pos: 1,
-      p_p_col_count: 3,
-      _mhmRemboursement_WAR_mhmportalapplication_action: 'detailPaiement',
-      counter: paymentCounter,
-      numPaiement: payment.id
-    }
+// module.exports.repayments = function() {
+//   const url =
+//     'https://www.harmonie-mutuelle.fr/web/mon-compte/mes-remboursements'
+//   const promises = []
+//   const payments = []
 
-    let options = Object.assign(defaultOptions, {
-      uri: url,
-      qs: qs
-    })
+//   for (let paymentCounter in this.payments) {
+//     const payment = this.payments[paymentCounter]
+//     let qs = {
+//       p_p_id: 'mhmRemboursement_WAR_mhmportalapplication',
+//       p_p_lifecycle: 2,
+//       p_p_state: 'normal',
+//       p_p_mode: 'view',
+//       p_p_cacheability: 'cacheLevelPage',
+//       p_p_col_id: 'column-2',
+//       p_p_col_pos: 1,
+//       p_p_col_count: 3,
+//       _mhmRemboursement_WAR_mhmportalapplication_action: 'detailPaiement',
+//       counter: paymentCounter,
+//       numPaiement: payment.id
+//     }
 
-    promises.push(request(options))
-    payments.push(payment)
-  }
+//     let options = Object.assign(defaultOptions, {
+//       uri: url,
+//       qs: qs
+//     })
 
-  return Promise.all(promises).then(documents => {
-    documents.forEach((document, i) => {
-      let doc = JSON.parse(document)
+//     promises.push(request(options))
+//     payments.push(payment)
+//   }
 
-      const groupAmount = round(
-        sumBy(doc.decompteList, reimbursement =>
-          parseAmount(reimbursement.montantRC)
-        ),
-        2
-      )
+//   return Promise.all(promises).then(documents => {
+//     documents.forEach((document, i) => {
+//       let doc = JSON.parse(document)
 
-      doc.decompteList.forEach(reimbursement => {
-        const paymentInfo = payments[i]
-        let bill = new Bill({
-          type: 'health_costs',
-          subtype: reimbursement.labelActe,
-          vendor: 'Harmonie',
-          groupAmount,
-          originalAmount: parseAmount(reimbursement.honoraires),
-          amount: parseAmount(reimbursement.montantRC),
-          originalDate: moment(paymentInfo.paymentDate, 'DD/MM/YYYY').toDate(),
-          date: moment(reimbursement.dateSoin, 'DD/MM/YYYY').toDate(),
-          isRefund: true,
-          beneficiary: `${reimbursement.nom} ${reimbursement.prenom}`,
-          socialSecurityRefund: parseAmount(reimbursement.montantRO)
-        })
+//       const groupAmount = round(
+//         sumBy(doc.decompteList, reimbursement =>
+//           parseAmount(reimbursement.montantRC)
+//         ),
+//         2
+//       )
 
-        // find the corresponding pdf file
-        // releves is ordered in reverse chronological order
-        for (let [dateReleve, url] of this.releves) {
-          if (dateReleve > bill.date) {
-            bill.fileurl = url
-            // we prefer to use the date of the releve in the file name and not the bill date
-            bill.uniqueId = moment(dateReleve).format(
-              '[Facture] YYYY[/]MM[/]DD MMM YYYY'
-            )
-            bill.filename = `${bill.uniqueId}.pdf`
-            bill.requestOptions = {
-              jar: j
-            }
-          }
-        }
+//       doc.decompteList.forEach(reimbursement => {
+//         const paymentInfo = payments[i]
+//         let bill = new Bill({
+//           type: 'health_costs',
+//           subtype: reimbursement.labelActe,
+//           vendor: 'Harmonie',
+//           groupAmount,
+//           originalAmount: parseAmount(reimbursement.honoraires),
+//           amount: parseAmount(reimbursement.montantRC),
+//           originalDate: moment(paymentInfo.paymentDate, 'DD/MM/YYYY').toDate(),
+//           date: moment(reimbursement.dateSoin, 'DD/MM/YYYY').toDate(),
+//           isRefund: true,
+//           beneficiary: `${reimbursement.nom} ${reimbursement.prenom}`,
+//           socialSecurityRefund: parseAmount(reimbursement.montantRO)
+//         })
 
-        this.yield(bill)
+//         // find the corresponding pdf file
+//         // releves is ordered in reverse chronological order
+//         for (let [dateReleve, url] of this.releves) {
+//           if (dateReleve > bill.date) {
+//             bill.fileurl = url
+//             // we prefer to use the date of the releve in the file name and not the bill date
+//             bill.uniqueId = moment(dateReleve).format(
+//               '[Facture] YYYY[/]MM[/]DD MMM YYYY'
+//             )
+//             bill.filename = `${bill.uniqueId}.pdf`
+//             bill.requestOptions = {
+//               jar: j
+//             }
+//           }
+//         }
 
-        // champs inutilisés:
-        // honoraires : montant dépensé
-        // montantRO : remboursement sécu
-        // nom et prénom
-        // numeroPaiement (sur objet parent)
-      })
-    })
-  })
-}
+//         this.yield(bill)
 
-module.exports.customSaveBills = function() {
-  const bankOptions = {
-    linkBankOperations: false
-  }
+//         // champs inutilisés:
+//         // honoraires : montant dépensé
+//         // montantRO : remboursement sécu
+//         // nom et prénom
+//         // numeroPaiement (sur objet parent)
+//       })
+//     })
+//   })
+// }
 
-  const filterOptions = {
-    keys: ['date', 'amount', 'vendor']
-  }
+// module.exports.customSaveBills = function() {
+//   const bankOptions = {
+//     linkBankOperations: false
+//   }
 
-  const accountOptions = {
-    sourceAccount: this.accountId,
-    sourceAccountIdentifier: this.fields.login
-  }
+//   const filterOptions = {
+//     keys: ['date', 'amount', 'vendor']
+//   }
 
-  const fileOptions = {
-    fileIdAttributes: ['uniqueId']
-  }
+//   const accountOptions = {
+//     sourceAccount: this.accountId,
+//     sourceAccountIdentifier: this.fields.login
+//   }
 
-  return saveBills(
-    this.files,
-    this.fields.folderPath,
-    Object.assign({}, accountOptions, bankOptions, filterOptions, fileOptions)
-  )
-}
+//   const fileOptions = {
+//     fileIdAttributes: ['uniqueId']
+//   }
+
+//   return saveBills(
+//     this.files,
+//     this.fields.folderPath,
+//     Object.assign({}, accountOptions, bankOptions, filterOptions, fileOptions)
+//   )
+// }
