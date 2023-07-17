@@ -1,107 +1,46 @@
 {
-  "version": "1.4.0",
-  "name": "Harmonie Mutuelle",
+  "version": "1.0.0",
+  "name": "Template",
   "type": "konnector",
   "language": "node",
-  "icon": "harmonie.svg",
-  "slug": "harmonie",
-  "source": "git@github.com:konnectors/cozy-konnector-harmonie.git",
+  "icon": "icon.svg",
+  "slug": "template",
+  "source": "git@github.com:konnectors/template_ccc.git",
   "editor": "Cozy",
-  "vendor_link": "https://www.harmonie-mutuelle.fr/",
+  "vendor_link": "https://books.toscrape.com/",
   "categories": [
-    "insurance"
+    "transport"
   ],
-  "fields": {
-    "login": {
-      "type": "text"
-    },
-    "password": {
-      "type": "password"
-    },
-    "advancedFields": {
-      "folderPath": {
-        "advanced": true,
-        "isRequired": false
-      }
-    }
-  },
-  "data_types": [
-    "bill"
-  ],
-  "screenshots": [],
-  "permissions": {
-    "carbon_copy": {
-      "type": "io.cozy.certified.carbon_copy"
-    },
-    "bank operations": {
-      "description": "Required to link the bills with their bank operation",
-      "type": "io.cozy.bank.operations"
-    },
-    "bills": {
-      "description": "Required to save the bills data",
-      "type": "io.cozy.bills"
-    },
-    "files": {
-      "description": "Required to save the bills",
-      "type": "io.cozy.files"
-    },
-    "accounts": {
-      "description": "Required to get the account's data",
-      "type": "io.cozy.accounts",
-      "verbs": [
-        "GET"
-      ]
-    }
-  },
-  "developer": {
-    "name": "Cozy Cloud",
-    "url": "https://cozy.io"
-  },
+  "fields": { },
+  "clientSide": true,
   "langs": [
     "fr"
   ],
+  "folders": [
+    {
+      "defaultDir": "$administrative/$konnector/$account"
+    }
+  ],
+  "permissions": {
+    "bills": {
+      "type": "io.cozy.bills"
+    },
+    "files": {
+      "type": "io.cozy.files"
+    }
+  },
   "locales": {
     "fr": {
-      "short_description": "Récupère vos relevés de remboursement",
-      "long_description": "<p>Récupère les relévés de remboursement de votre assurance santé complémentaire, pour les adhérents particuliers ou salariés.</p><br><p>Les comptes de Sécurité Sociale Indépendants ne sont pas gérés.<br>Les comptes \"Harmonie Fonction Publique\" ne sont pas gérés.</p><br><p>Si vous avez connecté le compte bancaire avec lequel vous effectuez vos dépenses de santé, ceci activera le suivi de remboursement dans l'application Cozy Banks.</p><p>Vous devez auparavant vous inscrire sur le service de relevés de santé en ligne sur le site internet d'Harmonie Mutuelle.</p>",
+      "short_description": "Récupère la liste de livres",
+      "long_description": "Récupère la liste de livre sur le site exemple",
       "permissions": {
-        "carboncopy": {
-          "description": "Utilisé pour certifier que vos fichiers sont copie conforme avec les documents d'origine"
+        "bills": {
+          "description": "Utilisé pour sauver les données des factures"
         },
         "files": {
           "description": "Utilisé pour sauvegarder les factures"
-        },
-        "accounts": {
-          "description": "Utilisé pour obtenir les données du compte"
-        }
-      }
-    },
-    "en": {
-      "short_description": "Fetch your reimbursment statement",
-      "long_description": "<p>This connector fetches your reimbursement statements for your complementary health insurance.</p><br><p>\"Sécurité Sociale Indépendants\" are not supported.<br>\"Harmonie Fonction Publique\" account are not supported.</p><br><p>If you have connected the bank account with which you make your medical expenses, this will enable refund tracking in the Cozy Banks app.</p>",
-      "permissions": {
-        "carboncopy": {
-          "description": "Use to certify your files are the exact copy of the originals"
-        },
-        "files": {
-          "description": "Required to save the bills"
-        },
-        "accounts": {
-          "description": "Required to get the account's data"
         }
       }
     }
-  },
-  "qualification_labels": [
-    "other_health_document"
-  ],
-  "features": [
-    "LOGIN_OK",
-    "METADATA_DEDUP",
-    "CARBON_COPY",
-    "DOC_QUALIFICATION_V2",
-    "SENTRY_V2"
-  ],
-  "banksTransactionRegExp": "\\bharmonie\\b",
-  "manifest_version": "2"
+  }
 }
