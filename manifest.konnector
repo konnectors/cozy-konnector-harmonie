@@ -48,6 +48,9 @@
         },
         "files": {
           "description": "Utilisé pour sauvegarder les factures"
+        },
+        "identities": {
+          "description": "Utilisé pour sauvegarder l'identité de l'utilisateur"
         }
       }
     },
@@ -63,6 +66,9 @@
         },
         "files": {
           "description": "Required to save the bills"
+        },
+        "identities": {
+          "description": "Required to save the user identity"
         }
       }
     }

@@ -4,7 +4,6 @@ import waitFor, { TimeoutError } from 'p-wait-for'
 const log = Minilog('ContentScript')
 Minilog.enable('harmonieCCC')
 
-// const baseUrl = 'https://harmonie-mutuelle.fr'
 const loginUrl = 'https://harmonie-et-moi.fr/identification'
 
 const personnalInfos = []
@@ -172,11 +171,6 @@ class HarmonieContentScript extends ContentScript {
   async getUserDataFromWebsite() {
     this.log('info', '🤖 getUserDataFromWebsite')
     await this.runInWorker('getIdentity')
-    await this.saveIdentity(this.store.userIdentity)
-    this.log(
-      'info',
-      `userIdentity : ${JSON.stringify(this.store.userIdentity)}`
-    )
     if (this.store.userIdentity.email) {
       return {
         sourceAccountIdentifier: this.store.userIdentity.email
@@ -188,6 +182,7 @@ class HarmonieContentScript extends ContentScript {
 
   async fetch(context) {
     this.log('info', '🤖 fetch')
+    await this.saveIdentity(this.store.userIdentity)
     if (this.store && this.store.userCredentials) {
       await this.saveCredentials(this.store.userCredentials)
     }
@@ -246,8 +241,6 @@ class HarmonieContentScript extends ContentScript {
   async waitForDocsInterceptions() {
     await waitFor(
       () => {
-        this.log('info', `contracts : ${JSON.stringify(userContracts)}`)
-        this.log('info', `docs : ${JSON.stringify(userDocuments)}`)
         if (userDocuments.length > 0 && userContracts.length > 0) {
           this.log('info', 'Interceptions OK, continue')
           return true
@@ -270,9 +263,7 @@ class HarmonieContentScript extends ContentScript {
   async getAllDocuments() {
     this.log('info', 'getAllDocuments starts')
     const contracts = await this.getContracts()
-    this.log('info', `computedContracts is : ${JSON.stringify(contracts)}`)
     const healthDocs = await this.getDocuments()
-    this.log('info', `computedDocs is : ${JSON.stringify(healthDocs)}`)
     const allDocuments = contracts.concat(healthDocs)
     return allDocuments
   }
@@ -324,7 +315,6 @@ class HarmonieContentScript extends ContentScript {
     const token = window.localStorage.getItem('_cap_token')
     const allDocuments = []
     const jsonDocuments = userDocuments[0].documentV1List
-    this.log('info', `jsonDocs is : ${JSON.stringify(jsonDocuments)}`)
     for (const oneDoc of jsonDocuments) {
       const vendorRef = oneDoc.idDocument
       const documentType = oneDoc.typeDocument
