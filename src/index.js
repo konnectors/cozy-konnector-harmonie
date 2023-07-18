@@ -4,7 +4,7 @@ import waitFor, { TimeoutError } from 'p-wait-for'
 const log = Minilog('ContentScript')
 Minilog.enable('harmonieCCC')
 
-const baseUrl = 'https://harmonie-mutuelle.fr'
+// const baseUrl = 'https://harmonie-mutuelle.fr'
 const loginUrl = 'https://harmonie-et-moi.fr/identification'
 
 const personnalInfos = []
@@ -48,7 +48,7 @@ window.XMLHttpRequest.prototype.open = function () {
     })
     return proxied.apply(this, [].slice.call(arguments))
   }
-  // Always return the orginial resppnse untouched
+  // Always return the orginial response untouched
   return proxied.apply(this, [].slice.call(arguments))
 }
 
@@ -78,29 +78,47 @@ class HarmonieContentScript extends ContentScript {
   async ensureAuthenticated({ account }) {
     // this.bridge.addEventListener('workerEvent', this.onWorkerEvent.bind(this))
     this.log('info', '🤖 ensureAuthenticated')
-    // if (!account) {
-    //   await this.ensureNotAuthenticated()
-    // }
+    if (!account) {
+      await this.ensureNotAuthenticated()
+    }
     await this.navigateToLoginForm()
     const authenticated = await this.runInWorker('checkAuthenticated')
     if (!authenticated) {
+      let credentials = await this.getCredentials()
+      if (credentials) {
+        this.log('info', 'credentials found, prefilling login form')
+        await this.clickAndWait('.already-an-account-button', '#username')
+        await this.prefillLoginForm(credentials)
+        // We cannot do an autoLogin on this connector, there's always a captcha to pass
+        await this.showLoginFormAndWaitForAuthentication()
+        return true
+      }
       this.log('info', 'Not authenticated')
       await this.clickAndWait('.already-an-account-button', '#username')
       await this.showLoginFormAndWaitForAuthentication()
+      return true
     }
     this.unblockWorkerInteractions()
     return true
   }
 
-  // async ensureNotAuthenticated() {
-  //   this.log('info', '🤖 ensureNotAuthenticated')
-  //   await this.navigateToLoginForm()
-  //   const authenticated = await this.runInWorker('checkAuthenticated')
-  //   if (!authenticated) {
-  //     return true
-  //   }
-  //   return true
-  // }
+  async prefillLoginForm(credentials) {
+    this.log('info', 'prefillLoginForm starts')
+    await this.runInWorker('fillText', '#username', credentials.email)
+    await this.runInWorker('fillText', '#password', credentials.password)
+  }
+
+  async ensureNotAuthenticated() {
+    this.log('info', '🤖 ensureNotAuthenticated')
+    await this.navigateToLoginForm()
+    const authenticated = await this.runInWorker('checkAuthenticated')
+    if (!authenticated) {
+      return true
+    }
+    await this.clickAndWait('button[routerlink="/mon-profil"]', '#logout')
+    await this.clickAndWait('#logout', '.already-an-account-button')
+    return true
+  }
 
   // onWorkerReady() {
   //   const button = document.querySelector('input[type=submit]')
