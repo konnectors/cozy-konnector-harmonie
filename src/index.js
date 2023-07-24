@@ -1,294 +1,363 @@
-process.env.SENTRY_DSN =
-  process.env.SENTRY_DSN ||
-  'https://a9ac468e07e44180b5e32f5aae525939@errors.cozycloud.cc/36'
+import { ContentScript } from 'cozy-clisk/dist/contentscript'
+import Minilog from '@cozy/minilog'
+import waitFor, { TimeoutError } from 'p-wait-for'
+const log = Minilog('ContentScript')
+Minilog.enable('harmonieCCC')
 
-const {
-  BaseKonnector,
-  requestFactory,
-  log,
-  cozyClient,
-  saveFiles,
-  solveCaptcha
-} = require('cozy-konnector-libs')
+const loginUrl = 'https://harmonie-et-moi.fr/identification'
 
-const models = cozyClient.new.models
-const { Qualification } = models.document
+const personnalInfos = []
+const userDocuments = []
+const userContracts = []
+// The override here is needed to intercept XHR requests made during the navigation
+var proxied = window.XMLHttpRequest.prototype.open
 
-const request = requestFactory({
-  // The debug mode shows all the details about HTTP requests and responses. Very useful for
-  // debugging but very verbose. This is why it is commented out by default
-  // debug: true,
-  // Activates [cheerio](https://cheerio.js.org/) parsing on each page
-  cheerio: false,
-  // If cheerio is activated do not forget to deactivate json parsing (which is activated by
-  // default in cozy-konnector-libs
-  json: true,
-  // This allows request-promise to keep cookies between requests
-  jar: true
-})
-
-const ApiKey = '710dhdh45j463hza324j8d3u8ns623g5'
-const loginId = 'hmd-1322145'
-
-module.exports = new BaseKonnector(start)
-
-async function start(fields, cozyParameters) {
-  log('info', 'Identification')
-
-  if (cozyParameters) log('debug', 'Paramètres trouvés')
-  const authRequest = await authenticate
-    .bind(this)(fields.login, fields.password)
-    .then(response => {
-      return response
-    })
-  log('info', 'Vous êtes connecté')
-
-  const { docs, firstToken } = await parseDocs(authRequest)
-  await downloadFiles(docs, firstToken, this.accountId, fields)
-  log('info', 'Fin de la récupération')
-}
-
-async function authenticate(username, password) {
-  log('debug', 'Authentification en cours')
-
-  const websiteKey = '6LcGBY0aAAAAAP37MlKdEgKEJApjrC_k5SUS0QMN'
-  const websiteURL = `https://authentification.harmonie-mutuelle.fr/auth/realms/adherents/protocol/openid-connect/auth?client_id=hmd_extranet_adherent_front&redirect_uri=https%3A%2F%2Fharmonie-et-moi.fr%2Fidentification&state=3c2c92d9-ece7-4c5a-bb36-b7ab815f1882&response_mode=query&response_type=code&scope=openid&nonce=2efa6299-d6e8-410a-a1a4-241ce455cec4`
-
-  const recaptchaKey = await solveCaptcha({
-    websiteKey,
-    websiteURL
-  })
-
-  await request({
-    uri: 'https://api.harmonie-mutuelle.fr/services/hapiour/adherent-api/v1/authenticate/prospect',
-    method: 'POST',
-    headers: {
-      'User-Agent':
-        'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:94.0) Gecko/20100101 Firefox/94.0',
-      Accept: 'application/json, text/plain, */*',
-      'Accept-Language': 'fr,fr-FR;q=0.8,en-US;q=0.5,en;q=0.3',
-      'Content-Type': 'application/json',
-      ApiKey: '710dhdh45j463hza324j8d3u8ns623g5',
-      Origin: 'https://harmonie-et-moi.fr',
-      Connection: 'keep-alive',
-      Referer: 'https://harmonie-et-moi.fr/',
-      'Sec-Fetch-Dest': 'empty',
-      'Sec-Fetch-Mode': 'cors',
-      'Sec-Fetch-Site': 'cross-site'
-    },
-    body: {
-      username: username,
-      password: password,
-      recaptcha: recaptchaKey,
-      os: 'Autre',
-      id: loginId,
-      application: 'extranet-adherent-front',
-      version: '39.0.5'
-    },
-    resolveWithFullResponse: true
-  })
-    .catch(err => {
-      if (err.statusCode != 200) {
-        log('err', err.message)
+window.XMLHttpRequest.prototype.open = function () {
+  var originalResponse = this
+  // Intercept user's personnal infos
+  if (arguments[1].includes('/adherent-api/v2/contact/client')) {
+    originalResponse.addEventListener('readystatechange', function () {
+      if (originalResponse.readyState === 4) {
+        // The response is a unique string, in order to access information parsing into JSON is needed.
+        const jsonPersonnalInfos = JSON.parse(originalResponse.responseText)
+        personnalInfos.push(jsonPersonnalInfos)
       }
     })
-    .then(response => {
-      return response
-    })
-
-  const authRequest = await request({
-    uri: 'https://api.harmonie-mutuelle.fr/services/hapiour/adherent-api/v1/authenticate/adherent',
-    method: 'POST',
-    headers: {
-      Host: 'api.harmonie-mutuelle.fr',
-      'User-Agent':
-        'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:94.0) Gecko/20100101 Firefox/94.0',
-      Accept: 'application/json, text/plain, */*',
-      'Accept-Language': 'fr,fr-FR;q=0.8,en-US;q=0.5,en;q=0.3',
-      'Accept-Encoding': 'gzip,deflate, br',
-      'Content-Type': 'application/json',
-      ApiKey: '710dhdh45j463hza324j8d3u8ns623g5',
-      Origin: 'https://harmonie-et-moi.fr',
-      Connection: 'keep-alive',
-      Referer: 'https://harmonie-et-moi.fr/',
-      'Sec-Fetch-Dest': 'empty',
-      'Sec-Fetch-Mode': 'cors',
-      'Sec-Fetch-Site': 'cross-site'
-    },
-    body: {
-      username: username,
-      password: password,
-      recaptcha: recaptchaKey,
-      os: 'Autre',
-      id: loginId,
-      application: 'extranet-adherent-front',
-      version: '39.0.5'
-    },
-    resolveWithFullResponse: true
-  })
-
-  return authRequest
-}
-
-async function parseDocs(authResponse) {
-  log('debug', 'Vérification des factures')
-  const firstToken = authResponse.caseless.dict.authorization
-  try {
-    const docsList = await request({
-      uri: 'https://api.harmonie-mutuelle.fr/services/hapiour/adherent-api/v1/documents?typeDocument=COURRIER_SANTE_ACTIVITE',
-      method: 'GET',
-      headers: {
-        'User-Agent':
-          'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:94.0) Gecko/20100101 Firefox/94.0',
-        'content-type': 'application/json',
-        ApiKey: `${ApiKey}`,
-        Authorization: `${firstToken}`
+    return proxied.apply(this, [].slice.call(arguments))
+  }
+  // Intercept user's documents
+  if (arguments[1].includes('adherent-api/v1/documents?typeDocument')) {
+    originalResponse.addEventListener('readystatechange', function () {
+      if (originalResponse.readyState === 4) {
+        // The response is a unique string, in order to access information parsing into JSON is needed.
+        const jsonDocuments = JSON.parse(originalResponse.responseText)
+        userDocuments.push(jsonDocuments)
       }
     })
+    return proxied.apply(this, [].slice.call(arguments))
+  }
+  // Intercept user's contracts
+  if (arguments[1].includes('adherent-api/v1/contrats?typeDocument')) {
+    originalResponse.addEventListener('readystatechange', function () {
+      if (originalResponse.readyState === 4) {
+        // The response is a unique string, in order to access information parsing into JSON is needed.
+        const jsonContracts = JSON.parse(originalResponse.responseText)
+        userContracts.push(jsonContracts)
+      }
+    })
+    return proxied.apply(this, [].slice.call(arguments))
+  }
+  // Always return the orginial response untouched
+  return proxied.apply(this, [].slice.call(arguments))
+}
 
-    const docs = docsList.documentV1List.map(doc => {
+class HarmonieContentScript extends ContentScript {
+  async navigateToLoginForm() {
+    this.log('info', '🤖 navigateToLoginForm')
+    await this.goto(loginUrl)
+    await Promise.race([
+      this.waitForElementInWorker('.already-an-account-button'),
+      this.waitForElementInWorker('.home-page-title')
+    ])
+  }
+
+  // onWorkerEvent(event, payload) {
+  //   if (event === 'loginSubmit') {
+  //     this.log('info', 'received loginSubmit, blocking user interactions')
+  //     this.blockWorkerInteractions()
+  //   } else if (event === 'loginError') {
+  //     this.log(
+  //       'info',
+  //       'received loginError, unblocking user interactions: ' + payload?.msg
+  //     )
+  //     this.unblockWorkerInteractions()
+  //   }
+  // }
+
+  async ensureAuthenticated({ account }) {
+    // this.bridge.addEventListener('workerEvent', this.onWorkerEvent.bind(this))
+    this.log('info', '🤖 ensureAuthenticated')
+    if (!account) {
+      await this.ensureNotAuthenticated()
+    }
+    await this.navigateToLoginForm()
+    const authenticated = await this.runInWorker('checkAuthenticated')
+    if (!authenticated) {
+      let credentials = await this.getCredentials()
+      if (credentials) {
+        this.log('info', 'credentials found, prefilling login form')
+        await this.clickAndWait('.already-an-account-button', '#username')
+        await this.prefillLoginForm(credentials)
+        // We cannot do an autoLogin on this connector, there's always a captcha to pass
+        await this.showLoginFormAndWaitForAuthentication()
+        return true
+      }
+      this.log('info', 'Not authenticated')
+      await this.clickAndWait('.already-an-account-button', '#username')
+      await this.showLoginFormAndWaitForAuthentication()
+      return true
+    }
+    this.unblockWorkerInteractions()
+    return true
+  }
+
+  async prefillLoginForm(credentials) {
+    this.log('info', 'prefillLoginForm starts')
+    await this.runInWorker('fillText', '#username', credentials.email)
+    await this.runInWorker('fillText', '#password', credentials.password)
+  }
+
+  async ensureNotAuthenticated() {
+    this.log('info', '🤖 ensureNotAuthenticated')
+    await this.navigateToLoginForm()
+    const authenticated = await this.runInWorker('checkAuthenticated')
+    if (!authenticated) {
+      return true
+    }
+    await this.clickAndWait('button[routerlink="/mon-profil"]', '#logout')
+    await this.clickAndWait('#logout', '.already-an-account-button')
+    return true
+  }
+
+  // onWorkerReady() {
+  //   const button = document.querySelector('input[type=submit]')
+  //   if (button) {
+  //     button.addEventListener('click', () =>
+  //       this.bridge.emit('workerEvent', 'loginSubmit')
+  //     )
+  //   }
+  //   const error = document.querySelector('.error')
+  //   if (error) {
+  //     this.bridge.emit('workerEvent', 'loginError', { msg: error.innerHTML })
+  //   }
+  // }
+
+  async checkAuthenticated() {
+    const loginField = document.querySelector('#username')
+    const passwordField = document.querySelector('#password')
+    if (loginField && passwordField) {
+      const userCredentials = await this.findAndSendCredentials.bind(this)(
+        loginField,
+        passwordField
+      )
+      this.log('info', "Sending user's credentials to pilot")
+      await this.sendToPilot({
+        userCredentials
+      })
+    }
+    return Boolean(document.querySelector('.home-page-title'))
+  }
+
+  async findAndSendCredentials(loginField, passwordField) {
+    this.log('info', 'findAndSendCredentials starts')
+    let userLogin = loginField.value
+    let userPassword = passwordField.value
+    const userCredentials = {
+      email: userLogin,
+      password: userPassword
+    }
+    return userCredentials
+  }
+
+  async showLoginFormAndWaitForAuthentication() {
+    log.debug('showLoginFormAndWaitForAuthentication start')
+    await this.setWorkerState({ visible: true })
+    await this.runInWorkerUntilTrue({
+      method: 'waitForAuthenticated'
+    })
+    await this.setWorkerState({ visible: false })
+  }
+
+  async getUserDataFromWebsite() {
+    this.log('info', '🤖 getUserDataFromWebsite')
+    await this.runInWorker('getIdentity')
+    if (this.store.userIdentity.email) {
       return {
-        typeDocument: doc.typeDocument,
-        filename: `${doc.dateEdition}_${doc.nom
-          .replace(/ /g, '_')
-          .toLowerCase()}_HarmonieMutuelle.pdf`,
-        fileurl: `https://api.harmonie-mutuelle.fr/services/hapiour/adherent-api/v1/document/${doc.idDocument}`,
-        vendorRef: doc.idDocument,
+        sourceAccountIdentifier: this.store.userIdentity.email
+      }
+    } else {
+      throw new Error('No user data identifier, the konnector should be fixed')
+    }
+  }
+
+  async fetch(context) {
+    this.log('info', '🤖 fetch')
+    await this.saveIdentity(this.store.userIdentity)
+    if (this.store && this.store.userCredentials) {
+      await this.saveCredentials(this.store.userCredentials)
+    }
+    await this.clickAndWait(
+      'a[href*="/mes-documents"]',
+      '.list-documents-flex-container'
+    )
+    await this.runInWorkerUntilTrue({ method: 'waitForDocsInterceptions' })
+    const allDocuments = await this.runInWorker('getAllDocuments')
+    await this.saveFiles(allDocuments, {
+      context,
+      fileIdAttributes: ['vendorRef'],
+      contentType: 'application/pdf',
+      qualificationLabel: 'other_health_document'
+    })
+  }
+
+  async getIdentity() {
+    this.log('info', 'getIdentity starts')
+    const infos = personnalInfos[0]
+    const userIdentity = {
+      name: {
+        givenName: infos.prenom,
+        familyName: infos.nom
+      },
+      email: infos.email,
+      phone: [],
+      address: [
+        {
+          street: infos.rue,
+          country: infos.pays,
+          city: infos.ville,
+          postCode: infos.codePostal
+        }
+      ],
+      socialSecurityNumber: infos.numSecuriteSociale
+    }
+
+    if (infos.telephoneDomicile) {
+      const houseNumber = {
+        number: infos.telephoneDomicile,
+        type: 'home'
+      }
+      userIdentity.phone.push(houseNumber)
+    }
+    if (infos.telephonePortable) {
+      const mobileNumber = {
+        number: infos.telephonePortable,
+        type: 'mobile'
+      }
+      userIdentity.phone.push(mobileNumber)
+    }
+    await this.sendToPilot({ userIdentity })
+  }
+
+  async waitForDocsInterceptions() {
+    await waitFor(
+      () => {
+        if (userDocuments.length > 0 && userContracts.length > 0) {
+          this.log('info', 'Interceptions OK, continue')
+          return true
+        }
+        return false
+      },
+      {
+        interval: 5000,
+        timeout: {
+          milliseconds: 30000,
+          message: new TimeoutError(
+            'Not all interceptions could have been done, check if any changes have been operated on the website'
+          )
+        }
+      }
+    )
+    return true
+  }
+
+  async getAllDocuments() {
+    this.log('info', 'getAllDocuments starts')
+    const contracts = await this.getContracts()
+    const healthDocs = await this.getDocuments()
+    const allDocuments = contracts.concat(healthDocs)
+    return allDocuments
+  }
+
+  getContracts() {
+    this.log('info', 'getContracts starts')
+    const token = window.localStorage.getItem('_cap_token')
+    const allContracts = []
+    const contracts = userContracts[0].contrats
+    for (const contract of contracts) {
+      const contractId = contract.numeroContrat
+      for (const document of contract.documents) {
+        const vendorRef = document.idDocument
+        const documentType = document.typeDocument
+        const editionDate = document.dateEdition
+        const filename = `${editionDate}_${document.nom}`
+        const fileurl = `https://hapiour.harmonie-mutuelle.fr/adherent-api/v1/document/${vendorRef}`
+        const computedDoc = {
+          vendorRef,
+          vendor: 'Harmonie Mutuelle',
+          filename,
+          fileurl,
+          documentType,
+          contractId,
+          date: new Date(editionDate),
+          fileAttributes: {
+            metadata: {
+              contentAuthor: 'harmonie-et-moi.fr',
+              issueDate: new Date(),
+              datetime: new Date(editionDate),
+              datetimeLabel: 'issueDate',
+              carbonCopy: true
+            }
+          },
+          requestOptions: {
+            headers: {
+              Authorization: token
+            }
+          }
+        }
+        allContracts.push(computedDoc)
+      }
+    }
+    return allContracts
+  }
+
+  getDocuments() {
+    this.log('info', 'getDocuments starts')
+    const token = window.localStorage.getItem('_cap_token')
+    const allDocuments = []
+    const jsonDocuments = userDocuments[0].documentV1List
+    for (const oneDoc of jsonDocuments) {
+      const vendorRef = oneDoc.idDocument
+      const documentType = oneDoc.typeDocument
+      const editionDate = oneDoc.dateEdition
+      const filename = `${editionDate}_${oneDoc.nom}.pdf`
+      const fileurl = `https://hapiour.harmonie-mutuelle.fr/adherent-api/v1/document/${vendorRef}`
+      const computedDoc = {
+        vendorRef,
+        vendor: 'Harmonie Mutuelle',
+        filename,
+        fileurl,
+        documentType,
+        date: new Date(editionDate),
         fileAttributes: {
           metadata: {
             contentAuthor: 'harmonie-et-moi.fr',
             issueDate: new Date(),
-            datetime: doc.dateEdition,
-            datetimeLabel: `issueDate`,
-            vendorRef: doc.idDocument,
-            carbonCopy: true,
-            qualification: Qualification.getByLabel('other_health_document')
+            datetime: new Date(editionDate),
+            datetimeLabel: 'issueDate',
+            carbonCopy: true
           }
-        }
-      }
-    })
-    return { docs, firstToken }
-  } catch (err) {
-    log('debug', err.message.substring(0, 60))
-    log('debug', `Pas de documents trouvé pour ce compte`)
-    return []
-  }
-}
-
-async function downloadFiles(docs, firstToken, accountId, fields) {
-  log('debug', `Downloading file one by one`)
-  try {
-    let firstDocArray = []
-    firstDocArray.push({
-      ...docs.shift(),
-      requestOptions: {
-        headers: {
-          'User-Agent':
-            'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:94.0) Gecko/20100101 Firefox/94.0',
-          'content-type': 'application/json',
-          ApiKey: `${ApiKey}`,
-          Authorization: `${firstToken}`
-        }
-      }
-    })
-    const fileRequest = await request({
-      uri: `${firstDocArray[0].fileurl}`,
-      method: 'GET',
-      headers: {
-        'User-Agent':
-          'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:94.0) Gecko/20100101 Firefox/94.0',
-        'content-type': 'application/json',
-        ApiKey: `${ApiKey}`,
-        Authorization: `${firstToken}`
-      },
-      resolveWithFullResponse: true
-    })
-    let nextToken = fileRequest.caseless.dict.authorization
-    await saveFiles(firstDocArray, fields, {
-      fileIdAttributes: ['vendorRef'],
-      identifiers: ['Harmonie Mutuelle'],
-      sourceAccount: accountId,
-      sourceAccountIdentifier: fields.login
-    })
-
-    for (let i = 0; i < docs.length; i++) {
-      let leftoverDocs = []
-      leftoverDocs.push({
-        ...docs[i],
+        },
         requestOptions: {
           headers: {
-            'User-Agent':
-              'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:94.0) Gecko/20100101 Firefox/94.0',
-            'content-type': 'application/json',
-            ApiKey: `${ApiKey}`,
-            Authorization: `${nextToken}`
+            Authorization: token
           }
         }
-      })
-
-      const loopFileRequest = await request({
-        uri: `${docs[i].fileurl}`,
-        method: 'GET',
-        headers: {
-          'User-Agent':
-            'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:94.0) Gecko/20100101 Firefox/94.0',
-          'content-type': 'application/json',
-          ApiKey: `${ApiKey}`,
-          Authorization: `${nextToken}`
-        },
-        resolveWithFullResponse: true
-      })
-      nextToken = loopFileRequest.caseless.dict.authorization
-      await saveFiles(leftoverDocs, fields, {
-        fileIdAttributes: ['vendorRef'],
-        identifiers: ['Harmonie Mutuelle'],
-        sourceAccount: accountId,
-        sourceAccountIdentifier: fields.login
-      })
+      }
+      allDocuments.push(computedDoc)
     }
-  } catch (err) {
-    log('debug', `something went wrong with this file`)
-    log('debug', err.message)
+    return allDocuments
   }
-
-  // We keep this around for future updates, it contains informations about the reimbursements but the account we are using to fix the konnector did not dispose of bills.
-
-  // const bills = []
-
-  // for (const doc of docs) {
-  //   const { vendorRef, label, amount, date, fileurl } = doc
-  //   const echDate = doc.date
-  //   bills.push({
-  //     vendorRef,
-  //     label,
-  //     amount,
-  //     date,
-  //     fileurl: `https://www.harmonie-et-moi.fr${fileurl}`,
-  //     filename: `${utils.formatDate(echDate)}_HarmonieMutuelle_document.pdf`,
-  //     vendor: 'Harmonie Mutuelle',
-  //     fileAttributes: {
-  //       metadata: {
-  //         contentAuthor: 'harmonie-et-moi.fr',
-  //         issueDate: utils.formatDate(date),
-  //         datetime: utils.formatDate(date),
-  //         datetimeLabel: `issueDate`,
-  //         invoiceNumber: `${vendorRef}`,
-  //         carbonCopy: true
-  //         // qualification: Qualification.getByLabel('other_health_document')
-  //       }
-  //     }
-  //   })
-  // }
-  // return bills
 }
 
-// const normalizeAmount = amount => {
-//   if (amount.includes('/')) return false
-//   return parseFloat(
-//     amount
-//       .replace('€', '')
-//       .replace(',', '.')
-//       .replace(' ', '')
-//       .trim()
-//   )
-// }
+const connector = new HarmonieContentScript()
+connector
+  .init({
+    additionalExposedMethodsNames: [
+      'getIdentity',
+      'getAllDocuments',
+      'waitForDocsInterceptions'
+    ]
+  })
+  .catch(err => {
+    log.warn(err)
+  })
