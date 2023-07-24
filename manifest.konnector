@@ -1,93 +1,74 @@
 {
-  "version": "1.4.0",
+  "version": "2.0.0",
   "name": "Harmonie Mutuelle",
   "type": "konnector",
   "language": "node",
-  "icon": "harmonie.svg",
+  "icon": "icon.svg",
   "slug": "harmonie",
   "source": "git@github.com:konnectors/cozy-konnector-harmonie.git",
   "editor": "Cozy",
-  "vendor_link": "https://www.harmonie-mutuelle.fr/",
+  "vendor_link": "https://harmonie-mutuelle.fr/",
   "categories": [
     "insurance"
   ],
-  "fields": {
-    "login": {
-      "type": "text"
-    },
-    "password": {
-      "type": "password"
-    },
-    "advancedFields": {
-      "folderPath": {
-        "advanced": true,
-        "isRequired": false
-      }
-    }
-  },
-  "data_types": [
-    "bill"
-  ],
-  "screenshots": [],
-  "permissions": {
-    "carbon_copy": {
-      "type": "io.cozy.certified.carbon_copy"
-    },
-    "bank operations": {
-      "description": "Required to link the bills with their bank operation",
-      "type": "io.cozy.bank.operations"
-    },
-    "bills": {
-      "description": "Required to save the bills data",
-      "type": "io.cozy.bills"
-    },
-    "files": {
-      "description": "Required to save the bills",
-      "type": "io.cozy.files"
-    },
-    "accounts": {
-      "description": "Required to get the account's data",
-      "type": "io.cozy.accounts",
-      "verbs": [
-        "GET"
-      ]
-    }
-  },
-  "developer": {
-    "name": "Cozy Cloud",
-    "url": "https://cozy.io"
-  },
+  "fields": { },
+  "clientSide": true,
   "langs": [
     "fr"
   ],
+  "folders": [
+    {
+      "defaultDir": "$administrative/$konnector/$account"
+    }
+  ],
+  "permissions": {
+    "bills": {
+      "type": "io.cozy.bills"
+    },
+    "files": {
+      "type": "io.cozy.files"
+    },
+    "carbon_copy": {
+      "type": "io.cozy.certified.carbon_copy"
+    },
+    "identities": {
+      "type": "io.cozy.identities"
+    }
+  },
   "locales": {
     "fr": {
-      "short_description": "Récupère vos relevés de remboursement",
-      "long_description": "<p>Récupère les relévés de remboursement de votre assurance santé complémentaire, pour les adhérents particuliers ou salariés.</p><br><p>Les comptes de Sécurité Sociale Indépendants ne sont pas gérés.<br>Les comptes \"Harmonie Fonction Publique\" ne sont pas gérés.</p><br><p>Si vous avez connecté le compte bancaire avec lequel vous effectuez vos dépenses de santé, ceci activera le suivi de remboursement dans l'application Cozy Banks.</p><p>Vous devez auparavant vous inscrire sur le service de relevés de santé en ligne sur le site internet d'Harmonie Mutuelle.</p>",
+      "short_description": "Récupère vos factures Harmonie Mutuelle.",
+      "long_description": "Récupère vos factures Harmonie Mutuelle.",
       "permissions": {
         "carboncopy": {
           "description": "Utilisé pour certifier que vos fichiers sont copie conforme avec les documents d'origine"
         },
+        "bills": {
+          "description": "Utilisé pour sauver les données des factures"
+        },
         "files": {
           "description": "Utilisé pour sauvegarder les factures"
         },
-        "accounts": {
-          "description": "Utilisé pour obtenir les données du compte"
+        "identities": {
+          "description": "Utilisé pour sauvegarder l'identité de l'utilisateur"
         }
       }
     },
     "en": {
-      "short_description": "Fetch your reimbursment statement",
-      "long_description": "<p>This connector fetches your reimbursement statements for your complementary health insurance.</p><br><p>\"Sécurité Sociale Indépendants\" are not supported.<br>\"Harmonie Fonction Publique\" account are not supported.</p><br><p>If you have connected the bank account with which you make your medical expenses, this will enable refund tracking in the Cozy Banks app.</p>",
+      "short_description": "Fetch a list of Harmonie Mutuelle invoices.",
+      "long_description": "Fetch a list of Harmonie Mutuelle invoices.",
       "permissions": {
         "carboncopy": {
-          "description": "Use to certify your files are the exact copy of the originals"
+          "description": "Required for carbon copy documents"
+        },
+        "bills": {
+          "description": "Required to save the bills data"
         },
         "files": {
           "description": "Required to save the bills"
         },
-        "accounts": {
-          "description": "Required to get the account's data"
+        "identities": {
+          "description": "Required to save the user identity"
         }
       }
     }
@@ -96,12 +77,8 @@
     "other_health_document"
   ],
   "features": [
-    "LOGIN_OK",
     "METADATA_DEDUP",
     "CARBON_COPY",
-    "DOC_QUALIFICATION_V2",
-    "SENTRY_V2"
-  ],
-  "banksTransactionRegExp": "\\bharmonie\\b",
-  "manifest_version": "2"
+    "DOC_QUALIFICATION_V2"
+  ]
 }
