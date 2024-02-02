@@ -1,5 +1,5 @@
 {
-  "version": "2.3.0",
+  "version": "2.2.0",
   "name": "Harmonie Mutuelle",
   "type": "konnector",
   "language": "node",
@@ -42,7 +42,7 @@
   "locales": {
     "fr": {
       "short_description": "Récupère vos factures Harmonie Mutuelle.",
-      "long_description": "Récupère vos factures Harmonie Mutuelle.",
+      "long_description": "Harmonie Mutuelle est une assurance santé française accessible sur [https://www.harmonie-mutuelle.fr](https://www.harmonie-mutuelle.fr).\n\n<br>**Connectez votre compte Harmonie Mutuelle à votre Cozy pour**\n\n- récupérer les relévés de remboursement de votre assurance santé\n- récupérer vos attestation toujours à jour\n\n<br>**A noter**\n\nVous devez avoir activé le service de relevés de santé en ligne sur le site internet d'Harmonie Mutuelle. Cela permet de recevoir vos relevés sous format PDF au lieu de format papier.\n\n<br>**Accédez directement à vos documents dans votre Drive personnel**\n\nEn connectant votre compte Harmonie Mutuelle, votre Cozy crée automatiquement un dossier dans **Drive > Administratif > Harmonie Mutuelle**. Vos documents sont à portée de main et toujours accessibles !\n\n<br>**Suivez le montant de vos remboursements avec Banks**\n\nLes remboursements récupérés sont automatiquement liées aux opérations bancaires Harmonie Mutuelle associées à votre compte si vous utilisez l’application Banks. Finis les maux de tête à faire les comptes !\n\n<br>**Sauvegardez vos identifiants avec pass**\n\nEn installant le gestionnaire de mots de passe, vos identifiants sont sauvegardés une bonne fois pour toutes pour vous faciliter la connexion au site d'Harmonie Mutuelle. Adieu les mots de passe oubliés !\n\n<br>**Configuration**\n\nPour connecter votre compte, il vous suffit d'utiliser votre application mobile Cozy et de vous connecter au service à l'aide de vos identifiants Harmonie Mutuelle.\n\nUne fois connecté, vous pourrez relancer dès que vous le souhaitez votre service pour récupérer les nouveaux éléments et les historiser dans un dossier Harmonie Mutuelle dans Drive.</p><p>Si vous déconnectez votre compte Harmonie Mutuelle, les informations déjà sauvegardées dans votre Cozy restent disponibles. Vous pouvez les supprimer manuellement par ailleurs.",
       "permissions": {
         "carboncopy": {
           "description": "Utilisé pour certifier que vos fichiers sont copie conforme avec les documents d'origine"
